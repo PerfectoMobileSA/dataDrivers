@@ -1,4 +1,4 @@
-package dataDriver.Excel;
+package dataDriver.excel;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
