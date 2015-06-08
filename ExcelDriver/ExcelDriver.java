@@ -410,21 +410,42 @@ public class ExcelDriver {
 	// This function can be used as is, for the TestNG data provider.
 	// Size of the row is based on the header row.
 	
-	// ************** add number of columns support *************
-	public Object[][] getData(){
+	public Object[][] getData(int numOfCols){
 		int rowsCount = this.sheet.getLastRowNum();
-		int colsCount = this.sheet.getRow(0).getLastCellNum();
+		//int colsCount = this.sheet.getRow(0).getLastCellNum();
 		
-		String[][] data = new String[rowsCount][colsCount];
+		// Remove empty lines (false POI result)
+		// If column 1-3 are empty, row is considered empty
+		for(int i = rowsCount; i>1; i--){
+			if (this.sheet.getRow(i).getCell(0) == null && 
+				this.sheet.getRow(i).getCell(1) == null && 
+				this.sheet.getRow(i).getCell(2) == null){
+				rowsCount -= 1;
+			}
+			else{
+				break;
+			}
+		}
+		
+		String[][] data = new String[rowsCount][numOfCols];
+		for(int i = 1; i < rowsCount; i++){
+			for(int j = 0; j < numOfCols; j++){
+				String val = this.sheet.getRow(i).getCell(j).getStringCellValue();
+				data[i-1][j] = (val != null) ? val : "";
+			}
+		}
+		
+		/*
 		for(int i = 1; i <= rowsCount; i++){
 			ArrayList<String> arr = getRow(i);
-			if(arr.size() > colsCount){
-				throw new ArrayIndexOutOfBoundsException();
-			}
-			for(int j = 0; j < arr.size(); j++){
+
+			//data[i-1][0] = Integer.toString(i);
+			for(int j = 0; j < arr.size() && j < numOfCols; j++){
 				data[i-1][j] = arr.get(j);
 			}
 		}
+		*/
+		
 		return data;
 	}
 	// Returns a 2-dim array of strings,
@@ -446,7 +467,21 @@ public class ExcelDriver {
 				break;
 			}
 		}
+		String[][] data = new String[rowsCount][numOfCols + 1];
+		for(int i = 1; i < rowsCount; i++){
+			data[i-1][0] = Integer.toString(i);
+			for(int j = 0; j < numOfCols; j++){
+				if(this.sheet.getRow(i).getCell(j) != null){
+					String val = this.sheet.getRow(i).getCell(j).getStringCellValue();
+					data[i-1][j+1] = val;
+				}
+				else{
+					data[i-1][j+1] = "";
+				}
+			}
+		}
 		
+		/*
 		String[][] data = new String[rowsCount][numOfCols + 1];
 		for(int i = 1; i <= rowsCount; i++){
 			ArrayList<String> arr = getRow(i);
@@ -456,13 +491,20 @@ public class ExcelDriver {
 				data[i-1][j+1] = arr.get(j);
 			}
 		}
+		*/
+		
 		return data;
 	}
 	
 	// Returns a string from cell (row,col).
 	// Top left corner is (0,0)
 	public String getCellAsString(int row, int col){
-		return this.sheet.getRow(row).getCell(col).getStringCellValue();
+		if(this.sheet.getRow(row).getCell(col) != null){
+			return this.sheet.getRow(row).getCell(col).getStringCellValue();
+		}
+		else{
+			return "";
+		}
 	}
 	
 	// Returns a string from cell by row number and column name.
